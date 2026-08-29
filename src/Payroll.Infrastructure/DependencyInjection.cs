@@ -13,8 +13,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
+        var connectionString = config.GetConnectionString("DefaultConnection");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("Connection string 'DefaultConnection' was not found in configuration.");
+        }
+
         services.AddDbContext<PayrollDbContext>(options =>
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(connectionString));
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
