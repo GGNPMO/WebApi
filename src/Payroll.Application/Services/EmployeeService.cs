@@ -8,11 +8,12 @@ namespace Payroll.Application.Services;
 
 public class EmployeeService(IRepository<Employee> repository, IUnitOfWork unitOfWork) : IEmployeeService
 {
-    public async Task<ApiResponse<IReadOnlyList<EmployeeDto>>> GetAllAsync(CancellationToken ct = default)
+    // Pagination:
+    public async Task<ApiResponse<PagedResult<EmployeeDto>>> GetAllAsync(PaginationQuery pagination, CancellationToken ct = default)
     {
-        var employees = await repository.GetAllAsync(ct);
-        var dtos = employees.Select(MapToDto).ToList().AsReadOnly();
-        return ApiResponse<IReadOnlyList<EmployeeDto>>.Ok(dtos);
+        var page = await repository.GetPagedAsync(null, pagination.ValidPageNumber, pagination.ValidPageSize,
+            query => query.OrderBy(e => e.Id), ct);
+        return ApiResponse<PagedResult<EmployeeDto>>.Ok(ToPagedResult(page, pagination));
     }
 
     public async Task<ApiResponse<EmployeeDto>> GetByIdAsync(int id, CancellationToken ct = default)
@@ -77,14 +78,20 @@ public class EmployeeService(IRepository<Employee> repository, IUnitOfWork unitO
         return ApiResponse<bool>.Ok(true, "Employee deactivated");
     }
 
-    public async Task<ApiResponse<IReadOnlyList<EmployeeDto>>> SearchAsync(string term, CancellationToken ct = default)
+    // Pagination:
+    public async Task<ApiResponse<PagedResult<EmployeeDto>>> SearchAsync(string term, PaginationQuery pagination, CancellationToken ct = default)
     {
-        var results = await repository.FindAsync(e =>
+        var page = await repository.GetPagedAsync(e =>
             e.FirstName.Contains(term) || e.LastName.Contains(term) ||
-            e.Email.Contains(term) || e.EmployeeCode.Contains(term), ct);
-        var dtos = results.Select(MapToDto).ToList().AsReadOnly();
-        return ApiResponse<IReadOnlyList<EmployeeDto>>.Ok(dtos);
+            e.Email.Contains(term) || e.EmployeeCode.Contains(term),
+            pagination.ValidPageNumber, pagination.ValidPageSize,
+            query => query.OrderBy(e => e.Id), ct);
+        return ApiResponse<PagedResult<EmployeeDto>>.Ok(ToPagedResult(page, pagination));
     }
+
+    private static PagedResult<EmployeeDto> ToPagedResult(
+        (IReadOnlyList<Employee> Items, int TotalCount) page, PaginationQuery pagination) =>
+        new(page.Items.Select(MapToDto).ToList().AsReadOnly(), pagination.ValidPageNumber, pagination.ValidPageSize, page.TotalCount);
 
     private static EmployeeDto MapToDto(Employee e) => new(
         e.Id, e.EmployeeCode, e.FirstName, e.LastName, e.Email,

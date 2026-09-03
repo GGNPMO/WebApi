@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Payroll.Application.Common;
 using Payroll.Application.DTOs;
 using Payroll.Application.Interfaces;
 
@@ -11,8 +12,9 @@ namespace Payroll.Api.Controllers;
 public class DeductionsController(IDeductionService deductionService) : ControllerBase
 {
     [HttpGet("employee/{employeeId}")]
-    public async Task<IActionResult> GetByEmployee(int employeeId, CancellationToken ct) =>
-        Ok(await deductionService.GetByEmployeeAsync(employeeId, ct));
+    // Pagination:
+    public async Task<IActionResult> GetByEmployee(int employeeId, [FromQuery] PaginationQuery pagination, CancellationToken ct) =>
+        Ok(await deductionService.GetByEmployeeAsync(employeeId, pagination, ct));
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateDeductionRequest request, CancellationToken ct)

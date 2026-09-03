@@ -8,11 +8,15 @@ namespace Payroll.Application.Services;
 
 public class DeductionService(IRepository<Deduction> repository, IUnitOfWork unitOfWork) : IDeductionService
 {
-    public async Task<ApiResponse<IReadOnlyList<DeductionDto>>> GetByEmployeeAsync(int employeeId, CancellationToken ct = default)
+    // Pagination:
+    public async Task<ApiResponse<PagedResult<DeductionDto>>> GetByEmployeeAsync(int employeeId, PaginationQuery pagination, CancellationToken ct = default)
     {
-        var deductions = await repository.FindAsync(d => d.EmployeeId == employeeId, ct);
-        var dtos = deductions.Select(MapToDto).ToList().AsReadOnly();
-        return ApiResponse<IReadOnlyList<DeductionDto>>.Ok(dtos);
+        var page = await repository.GetPagedAsync(d => d.EmployeeId == employeeId,
+            pagination.ValidPageNumber, pagination.ValidPageSize,
+            query => query.OrderByDescending(d => d.Id), ct);
+        var result = new PagedResult<DeductionDto>(page.Items.Select(MapToDto).ToList().AsReadOnly(),
+            pagination.ValidPageNumber, pagination.ValidPageSize, page.TotalCount);
+        return ApiResponse<PagedResult<DeductionDto>>.Ok(result);
     }
 
     public async Task<ApiResponse<DeductionDto>> CreateAsync(CreateDeductionRequest request, CancellationToken ct = default)

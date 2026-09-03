@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Payroll.Application.Common;
 using Payroll.Application.DTOs;
 using Payroll.Application.Interfaces;
+
 
 namespace Payroll.Api.Controllers;
 
@@ -11,8 +13,9 @@ namespace Payroll.Api.Controllers;
 public class EmployeesController(IEmployeeService employeeService) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct) =>
-        Ok(await employeeService.GetAllAsync(ct));
+    // Pagination:
+    public async Task<IActionResult> GetAll([FromQuery] PaginationQuery pagination, CancellationToken ct) =>
+        Ok(await employeeService.GetAllAsync(pagination, ct));
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
@@ -22,8 +25,9 @@ public class EmployeesController(IEmployeeService employeeService) : ControllerB
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> Search([FromQuery] string term, CancellationToken ct) =>
-        Ok(await employeeService.SearchAsync(term, ct));
+    // Pagination:
+    public async Task<IActionResult> Search([FromQuery] string term, [FromQuery] PaginationQuery pagination, CancellationToken ct) =>
+        Ok(await employeeService.SearchAsync(term, pagination, ct));
 
     [HttpPost]
     [Authorize(Roles = "Admin,HR")]
