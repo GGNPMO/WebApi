@@ -35,6 +35,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 
 // ── Swagger with JWT support ──
 builder.Services.AddEndpointsApiExplorer();

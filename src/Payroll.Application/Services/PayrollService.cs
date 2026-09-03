@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using Payroll.Application.Common;
 using Payroll.Application.DTOs;
 using Payroll.Application.Interfaces;
@@ -10,8 +11,11 @@ public class PayrollService(
     IRepository<PayrollRecord> payrollRepo,
     IRepository<Employee> employeeRepo,
     IRepository<Deduction> deductionRepo,
-    IUnitOfWork unitOfWork) : IPayrollService
+    IUnitOfWork unitOfWork,
+    IMemoryCache cache) : IPayrollService
 {
+    private static string StatusCacheKey(int id) => $"payroll-status:{id}";
+
     public async Task<ApiResponse<PayrollDto>> GeneratePayrollAsync(GeneratePayrollRequest request, CancellationToken ct = default)
     {
         var emp = await employeeRepo.GetByIdAsync(request.EmployeeId, ct);
@@ -79,6 +83,7 @@ public class PayrollService(
         record.ProcessedDate = DateTime.UtcNow;
         await payrollRepo.UpdateAsync(record, ct);
         await unitOfWork.SaveChangesAsync(ct);
+        cache.Remove(StatusCacheKey(payrollId));
 
         var emp = await employeeRepo.GetByIdAsync(record.EmployeeId, ct);
         return ApiResponse<PayrollDto>.Ok(MapToDto(record, emp?.FullName ?? ""), "Payroll processed");
@@ -115,13 +120,18 @@ public class PayrollService(
 
     public async Task<ApiResponse<PayrollStatusDto>> GetStatusAsync(int id, CancellationToken ct = default)
     {
+        if (cache.TryGetValue(StatusCacheKey(id), out ApiResponse<PayrollStatusDto>? cachedResponse))
+            return cachedResponse!;
+
         // Polling reads the latest persisted state without loading payroll details.
         var record = await payrollRepo.GetByIdAsync(id, ct);
         if (record is null)
             return ApiResponse<PayrollStatusDto>.Fail("Payroll record not found");
 
-        return ApiResponse<PayrollStatusDto>.Ok(
+        var response = ApiResponse<PayrollStatusDto>.Ok(
             new PayrollStatusDto(record.Id, record.Status, record.ProcessedDate));
+        cache.Set(StatusCacheKey(id), response, TimeSpan.FromSeconds(2));
+        return response;
     }
 
     private static PayrollDto MapToDto(PayrollRecord r, string empName) => new(
