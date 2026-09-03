@@ -24,6 +24,15 @@ public class PayrollController(IPayrollService payrollService) : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    [HttpGet("{id}/status")]
+    [Authorize]
+    // Clients can poll this endpoint until the payroll reaches its final status.
+    public async Task<IActionResult> GetStatus(int id, CancellationToken ct)
+    {
+        var result = await payrollService.GetStatusAsync(id, ct);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
     [HttpGet("employee/{employeeId}")]
     [Authorize]
     public async Task<IActionResult> GetByEmployee(int employeeId, CancellationToken ct) =>

@@ -113,6 +113,17 @@ public class PayrollService(
         return ApiResponse<PayrollDto>.Ok(MapToDto(record, emp?.FullName ?? ""));
     }
 
+    public async Task<ApiResponse<PayrollStatusDto>> GetStatusAsync(int id, CancellationToken ct = default)
+    {
+        // Polling reads the latest persisted state without loading payroll details.
+        var record = await payrollRepo.GetByIdAsync(id, ct);
+        if (record is null)
+            return ApiResponse<PayrollStatusDto>.Fail("Payroll record not found");
+
+        return ApiResponse<PayrollStatusDto>.Ok(
+            new PayrollStatusDto(record.Id, record.Status, record.ProcessedDate));
+    }
+
     private static PayrollDto MapToDto(PayrollRecord r, string empName) => new(
         r.Id, r.EmployeeId, empName, r.Month, r.Year,
         r.BaseSalary, r.HRA, r.DA, r.TA, r.OtherAllowances,

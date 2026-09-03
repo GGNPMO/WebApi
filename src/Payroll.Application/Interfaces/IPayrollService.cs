@@ -10,4 +10,5 @@ public interface IPayrollService
     Task<ApiResponse<IReadOnlyList<PayrollDto>>> GetByEmployeeAsync(int employeeId, CancellationToken ct = default);
     Task<ApiResponse<IReadOnlyList<PayrollDto>>> GetByMonthYearAsync(int month, int year, CancellationToken ct = default);
     Task<ApiResponse<PayrollDto>> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<ApiResponse<PayrollStatusDto>> GetStatusAsync(int id, CancellationToken ct = default);
 }

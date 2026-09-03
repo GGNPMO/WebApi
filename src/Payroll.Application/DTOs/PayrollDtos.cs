@@ -19,6 +19,12 @@ public record PayrollDto(
     DateTime? ProcessedDate
 );
 
+public record PayrollStatusDto(
+    int Id,
+    string Status,
+    DateTime? ProcessedDate
+);
+
 public record GeneratePayrollRequest(int EmployeeId, int Month, int Year);
 
 public record ProcessPayrollRequest(int PayrollId);
