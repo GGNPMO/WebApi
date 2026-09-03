@@ -89,6 +89,35 @@ public class PayrollService(
         return ApiResponse<PayrollDto>.Ok(MapToDto(record, emp?.FullName ?? ""), "Payroll processed");
     }
 
+    public async Task<ApiResponse<IReadOnlyList<PayrollDto>>> QueryAsync(PayrollQuery query, CancellationToken ct = default)
+    {
+        var records = (await payrollRepo.GetAllAsync(ct))
+            .Where(r => (!query.EmployeeId.HasValue || r.EmployeeId == query.EmployeeId) &&
+                        (!query.Month.HasValue || r.Month == query.Month) &&
+                        (!query.Year.HasValue || r.Year == query.Year) &&
+                        (string.IsNullOrWhiteSpace(query.Status) ||
+                         r.Status.Equals(query.Status, StringComparison.OrdinalIgnoreCase)));
+
+        records = query.SortBy.ToLowerInvariant() switch
+        {
+            "grosssalary" => query.SortDescending ? records.OrderByDescending(r => r.GrossSalary) : records.OrderBy(r => r.GrossSalary),
+            "netsalary" => query.SortDescending ? records.OrderByDescending(r => r.NetSalary) : records.OrderBy(r => r.NetSalary),
+            "month" => query.SortDescending ? records.OrderByDescending(r => r.Year).ThenByDescending(r => r.Month) : records.OrderBy(r => r.Year).ThenBy(r => r.Month),
+            "status" => query.SortDescending ? records.OrderByDescending(r => r.Status) : records.OrderBy(r => r.Status),
+            "employeeid" => query.SortDescending ? records.OrderByDescending(r => r.EmployeeId) : records.OrderBy(r => r.EmployeeId),
+            _ => query.SortDescending ? records.OrderByDescending(r => r.CreatedAt) : records.OrderBy(r => r.CreatedAt)
+        };
+
+        var dtos = new List<PayrollDto>();
+        foreach (var record in records)
+        {
+            var employee = await employeeRepo.GetByIdAsync(record.EmployeeId, ct);
+            dtos.Add(MapToDto(record, employee?.FullName ?? ""));
+        }
+
+        return ApiResponse<IReadOnlyList<PayrollDto>>.Ok(dtos.AsReadOnly());
+    }
+
     public async Task<ApiResponse<IReadOnlyList<PayrollDto>>> GetByEmployeeAsync(int employeeId, CancellationToken ct = default)
     {
         var records = await payrollRepo.FindAsync(p => p.EmployeeId == employeeId, ct);

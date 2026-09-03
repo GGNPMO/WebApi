@@ -24,6 +24,10 @@ public class PayrollController(IPayrollService payrollService) : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Query([FromQuery] PayrollQuery query, CancellationToken ct) =>
+        Ok(await payrollService.QueryAsync(query, ct));
+
     [HttpGet("{id}/status")]
     [Authorize]
     // Clients can poll this endpoint until the payroll reaches its final status.

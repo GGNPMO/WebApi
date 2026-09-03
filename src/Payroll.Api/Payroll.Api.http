@@ -4,3 +4,7 @@ GET {{Payroll.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Filter processed payroll for an employee and sort by net salary, highest first.
+GET {{Payroll.Api_HostAddress}}/api/payroll?employeeId=1&status=Processed&sortBy=netSalary&sortDescending=true
+Accept: application/json

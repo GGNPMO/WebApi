@@ -7,6 +7,7 @@ public interface IPayrollService
 {
     Task<ApiResponse<PayrollDto>> GeneratePayrollAsync(GeneratePayrollRequest request, CancellationToken ct = default);
     Task<ApiResponse<PayrollDto>> ProcessPayrollAsync(int payrollId, CancellationToken ct = default);
+    Task<ApiResponse<IReadOnlyList<PayrollDto>>> QueryAsync(PayrollQuery query, CancellationToken ct = default);
     Task<ApiResponse<IReadOnlyList<PayrollDto>>> GetByEmployeeAsync(int employeeId, CancellationToken ct = default);
     Task<ApiResponse<IReadOnlyList<PayrollDto>>> GetByMonthYearAsync(int month, int year, CancellationToken ct = default);
     Task<ApiResponse<PayrollDto>> GetByIdAsync(int id, CancellationToken ct = default);

@@ -28,3 +28,12 @@ public record PayrollStatusDto(
 public record GeneratePayrollRequest(int EmployeeId, int Month, int Year);
 
 public record ProcessPayrollRequest(int PayrollId);
+
+public record PayrollQuery(
+    int? EmployeeId = null,
+    int? Month = null,
+    int? Year = null,
+    string? Status = null,
+    string SortBy = "createdAt",
+    bool SortDescending = true
+);
