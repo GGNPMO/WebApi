@@ -44,3 +44,6 @@ Thumbs.db
 
 # Publish output
 publish/
+
+# Local deployment secrets
+k8s/*.local.yaml

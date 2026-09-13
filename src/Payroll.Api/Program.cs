@@ -36,6 +36,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+builder.Services.AddHealthChecks();
 
 // ── Swagger with JWT support ──
 builder.Services.AddEndpointsApiExplorer();
@@ -74,9 +75,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ── Auto-create database on startup (dev only) ──
-using (var scope = app.Services.CreateScope())
+// Keep database creation convenient for local development without allowing a production pod to mutate schema.
+if (app.Environment.IsDevelopment() && builder.Configuration.GetValue("Database:EnsureCreated", true))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<PayrollDbContext>();
     await db.Database.EnsureCreatedAsync();
 }
@@ -91,5 +93,6 @@ app.UseCors("ReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
