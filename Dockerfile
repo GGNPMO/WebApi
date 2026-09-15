@@ -18,8 +18,8 @@ RUN dotnet publish src/Payroll.Api/Payroll.Api.csproj \
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-ENV ASPNETCORE_HTTP_PORTS=8080
-EXPOSE 8080
+ENV ASPNETCORE_HTTP_PORTS=3000
+EXPOSE 3000
 
 COPY --from=build /app/publish .
 USER $APP_UID

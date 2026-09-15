@@ -4,7 +4,7 @@ metadata:
   name: payroll-api-config
 data:
   ASPNETCORE_ENVIRONMENT: Production
-  ASPNETCORE_HTTP_PORTS: "8080"
+  ASPNETCORE_HTTP_PORTS: "3000"
   Database__EnsureCreated: "false"
   Jwt__Issuer: PayrollApi
   Jwt__Audience: PayrollReactApp

@@ -27,7 +27,7 @@ From the repository root:
 $env:IMAGE_NAME = "payroll-api"
 $env:IMAGE_TAG = "1.0.0"
 docker build --tag "$env:IMAGE_NAME`:$env:IMAGE_TAG" .
-docker run --rm --publish 8080:8080 `
+docker run --rm --publish 3000:3000 `
   --env "ConnectionStrings__DefaultConnection=$env:ConnectionStrings__DefaultConnection" `
   --env "Jwt__Key=$env:Jwt__Key" `
   --env "Jwt__Issuer=PayrollApi" `
@@ -35,7 +35,7 @@ docker run --rm --publish 8080:8080 `
   --env "Database__EnsureCreated=false" `
   "$env:IMAGE_NAME`:$env:IMAGE_TAG"
 
-Invoke-WebRequest http://localhost:8080/health
+Invoke-WebRequest http://localhost:3000/health
 ```
 
 The Dockerfile uses the official free `mcr.microsoft.com/dotnet` SDK and ASP.NET runtime images, publishes without an app host, and runs as the runtime image's non-root `APP_UID`.
@@ -66,7 +66,7 @@ minikube image load "$env:IMAGE_NAME`:$env:IMAGE_TAG"
 kubectl apply -k .\k8s
 kubectl set image deployment/payroll-api "api=$env:IMAGE_NAME`:$env:IMAGE_TAG"
 kubectl rollout status deployment/payroll-api
-kubectl port-forward service/payroll-api 8080:80
+kubectl port-forward service/payroll-api 3000:3000
 ```
 
 ### Kind
@@ -80,7 +80,7 @@ kind load docker-image "$env:IMAGE_NAME`:$env:IMAGE_TAG" --name payroll
 kubectl apply -k .\k8s
 kubectl set image deployment/payroll-api "api=$env:IMAGE_NAME`:$env:IMAGE_TAG"
 kubectl rollout status deployment/payroll-api
-kubectl port-forward service/payroll-api 8080:80
+kubectl port-forward service/payroll-api 3000:3000
 ```
 
 ### AKS
@@ -109,7 +109,7 @@ docker push "$env:IMAGE_NAME`:$env:IMAGE_TAG"
 kubectl apply -k .\k8s
 kubectl set image deployment/payroll-api "api=$env:IMAGE_NAME`:$env:IMAGE_TAG"
 kubectl rollout status deployment/payroll-api
-kubectl port-forward service/payroll-api 8080:80
+kubectl port-forward service/payroll-api 3000:3000
 ```
 
 For a private Azure Container Registry, the equivalent setup is `az acr create`, `az acr login`, `az aks update --attach-acr`, then push the image and set the same Deployment image. This is optional and adds an Azure resource.
@@ -135,7 +135,7 @@ Common fixes:
 
 - `CreateContainerConfigError`: create `payroll-api-secrets` in the current namespace.
 - `ImagePullBackOff`: verify the image tag, registry visibility, AKS pull permissions, or local Minikube/Kind image loading.
-- Probe failures: inspect `kubectl logs` and confirm the container listens on port `8080`; test with `kubectl port-forward service/payroll-api 8080:80`.
+- Probe failures: inspect `kubectl logs` and confirm the container listens on port `3000`; test with `kubectl port-forward service/payroll-api 3000:3000`.
 - Database errors: verify `ConnectionStrings__DefaultConnection`, network access from the cluster, and SQL Server credentials. Production does not run `EnsureCreated`.
 
 ## Cost saving and cleanup
